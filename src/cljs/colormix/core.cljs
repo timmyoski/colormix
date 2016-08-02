@@ -9,6 +9,8 @@
 
 (def board-size 5)
 
+(def hmmm "gfgsd")
+
 (defn px-str [anumb]
   (str anumb "px"))
 
