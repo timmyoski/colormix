@@ -45,6 +45,7 @@
 (defn nb3 [n]
   (vec (for [x (range n)]
   (vec (for [x (range n)]
+    ^{:key n}
     (rand-color))))))
 
 ;; -------------------------
