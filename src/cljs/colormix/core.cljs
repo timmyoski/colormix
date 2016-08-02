@@ -35,8 +35,8 @@
    (rand-int 256)]
 )
 
-(defn new-board [n]
-  (vec (repeat n (vec (repeat n (rand-color))))))
+;(defn new-board [n]
+;  (vec (repeat n (vec (repeat n (rand-color))))))
 
 
 (defn nb [n]
