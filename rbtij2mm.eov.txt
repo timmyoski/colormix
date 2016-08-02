@@ -1,0 +1,30 @@
+﻿
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+# On branch master
+#
+# Initial commit
+#
+# Changes to be committed:
+#	new file:   .gitattributes
+#	new file:   .gitignore
+#	new file:   InstaREPL helpers/help1.cljs
+#	new file:   InstaREPL helpers/help2.cljs
+#	new file:   LICENSE
+#	new file:   Procfile
+#	new file:   README.md
+#	new file:   env/dev/clj/colormix/middleware.clj
+#	new file:   env/dev/clj/colormix/repl.clj
+#	new file:   env/dev/cljs/colormix/dev.cljs
+#	new file:   env/prod/clj/colormix/middleware.clj
+#	new file:   env/prod/cljs/colormix/prod.cljs
+#	new file:   project.clj
+#	new file:   resources/public/css/site.css
+#	new file:   resources/public/css/site.min.css
+#	new file:   src/clj/colormix/handler.clj
+#	new file:   src/clj/colormix/server.clj
+#	new file:   src/cljc/colormix/util.cljc
+#	new file:   src/cljs/colormix/core.cljs
+#	new file:   system.properties
+#
+
