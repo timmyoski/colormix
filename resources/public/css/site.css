@@ -1,12 +1,13 @@
 .body-container {
   font-family: 'Helvetica Neue', Verdana, Helvetica, Arial, sans-serif;
-  max-width: 600px;
+  max-width: 75%;
   margin: 0 auto;
-  padding-top: 72px;
+  padding-top: 2%;
   -webkit-font-smoothing: antialiased;
   font-size: 1.125em;
   color: #333;
   line-height: 1.5em;
+  text-align: center;
 }
 
 h1, h2, h3 {
@@ -31,4 +32,14 @@ a {
 
 a:hover {
   text-decoration: underline;
+}
+
+.content{
+  margin: 0 auto;
+  padding-top: 3%;
+}
+
+.jankynav{
+  margin: 0 auto;
+  text-align: center;
 }

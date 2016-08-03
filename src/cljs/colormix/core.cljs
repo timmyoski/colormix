@@ -4,19 +4,42 @@
               [secretary.core :as secretary :include-macros true]
               [accountant.core :as accountant]))
 
+
 ;; -------------------------
-;; Functions
+;; Functions that the ATOM relies on
+
+(defn rand-color-num []
+  [(rand-int 256)
+   (rand-int 256)
+   (rand-int 256)]
+)
+
+(defn nb3 [n]
+  (vec (for [x (range n)]
+  (vec (for [y (range n)]
+    (with-meta (rand-color-num) {:key [x y]}))))))
 
 (def board-size 5)
 
-(def hmmm "gfgsd")
+;; -------------------------
+;; ALL HAIL THE ATOM
+;new-board should take a min value of 2 or else that will fuck up all the neighbor calls... will it?
+
+(defonce app-state
+  (atom {:text "...blend away your troubles...."
+         :board (nb3 board-size)
+         }))
+;;ATOM
+;;--------------------------
+;;--------------------------
+;;MOAR Functions
 
 (defn px-str [anumb]
   (str anumb "px"))
 
-(def block {:size 100
+(def block {:size (- (:total-size block) (* (:margin block) 2))
             :margin 2
-            :total-size (+ (:size block) (* (:margin block) 2))
+            :total-size 100
             })
 
 (defn rgb-str [rgbvals]
@@ -31,32 +54,30 @@
             (rand-int 256)])
 )
 
-(defn rand-color-num []
-  [(rand-int 256)
-   (rand-int 256)
-   (rand-int 256)]
-)
+(defn get-sides [x size];reliant on sq board, min-size = 2x2
+  (let [last-index (- size 1)];readability
+    (cond
+      (and (< 0 x (- size 1))) [(dec x) (inc x)];if not along edge
+      (= x 0) [(inc x)];if block on left/top edge
+      (= x (- size 1)) [(dec x)];if block on right/bottom edge
+      :default nil
+  )))
 
-;(defn new-board [n]
-;  (vec (repeat n (vec (repeat n (rand-color))))))
+(defn get-all-sides [x y size]
+  (let [last-index (- size 1)];readability
+  (if (and (<= 0 x last-index) (<= 0 y last-index))
+  (concat
+    (map #(vector % y) (get-sides x size))
+    (map #(vector x %) (get-sides y size))))))
 
+(defn get-xy [n]
+  [(int (/ n board-size)) (mod n board-size)])
 
-(defn nb [n]
-  (vec(repeatedly n rand-color)))
+(defn get-block [n]
+  (let [[x y] (get-xy n)]
+    (get-in @app-state [:board x y])
+  ))
 
-(defn nb3 [n]
-  (vec (for [x (range n)]
-  (vec (for [x (range n)]
-    ^{:key n}
-    (rand-color))))))
-
-;; -------------------------
-;; ALL HAIL THE ATOM
-
-(defonce app-state
-  (atom {:text "ColorMix... blend away your troubles"
-         :board (nb3 board-size)
-         }))
 
 ;; -------------------------
 ;; Views
@@ -69,23 +90,17 @@
 (defn current-page []
   [:div [(session/get :current-page)]])
 
-(defn get-xy [n]
-  [(int (/ n board-size)) (mod n board-size)])
-
-(defn get-block [n]
-  (let [[x y] (get-xy n)]
-    (get-in @app-state [:board x y])
-  ))
-
-
+;;---------------------------
+;; Main view
 
 (defn home-page []
-  [:div [:h2 (:text @app-state)]
-   [:div [:a {:href "/about"} "go to about page"]]
-     [:div.content {:style {:max-width "600px"}}
-      (for [x (range (* board-size board-size))]
+  [:div {:class "react-container"} [:h2 (:text @app-state)]
+   [:div {:class "jankynav"} [:a {:href "/about"} "go to about page"]]
+     [:div {:class "content"
+            :style {:max-width (str (* (:total-size block) board-size) "px")}}
+      (doall (for [x (range (* board-size board-size))]
           ^{:key x}
-           [:div {:style {:background-color (get-block x)
+           [:div {:style {:background-color (rgb-str (get-block x))
                           :color (rand-color)
                           :margin (px-str (:margin block))
                           :width (px-str (:size block))
@@ -96,7 +111,7 @@
                   :on-click (fn [e]
                               (prn (.remove (.-target e))))
                   }
-           (get-block x)])
+           (rgb-str (get-block x))]))
             ;figure out destruct better and use to set color of block
     ]
    ])
@@ -116,7 +131,7 @@
 
 (defn mount-root []
   (do
-    (prn (:board @app-state))
+    ;(prn (:board @app-state))
     (reagent/render [current-page] (.getElementById js/document "app"))
     ))
 

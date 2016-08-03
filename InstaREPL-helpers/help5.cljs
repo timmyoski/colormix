@@ -15,14 +15,15 @@
   (vec (for [x (range n)]
     (with-meta (rand-color-num) {:key n}))))))
 
-(def v (nb3 2))
+(defonce v (nb3 2))
 v
 (let [r ((v 1) 0)]
    (meta r))
 
+(:key (meta (get-in v [1 0])))
+
 ;to blend
 ;swap! (map blend board)
-
 
 
 
@@ -81,3 +82,9 @@ v
 (def ss (vec (range s)))
 
 (count ss)
+
+
+
+
+
+
