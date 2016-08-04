@@ -103,14 +103,14 @@
   (let [[x y] (get-xy n)
         side-rgb-nvals (get-all-rgb n)
         num-side-vals (count side-rgb-nvals)
-        weighted-ratio 4
+        weighted-ratio 5
         num-repeats (* weighted-ratio num-side-vals)
         ]
-  (as-> side-rgb-nvals v
-        (concat (repeat num-repeats (get-block-n n)) v)
-        (apply map + v)
-        (vec (map #(int (/ % (+ num-repeats num-side-vals))) v));FIXXXX the int rounding, decide math/floor vs ceil
-        (swap! app-state assoc-in [:board x y] v)
+        (as-> side-rgb-nvals v
+              (concat (repeat num-repeats (get-block-n n)) v)
+              (apply map + v)
+              (vec (map #(int (/ % (+ num-repeats num-side-vals))) v));FIXXXX the int rounding, decide math/floor vs ceil
+              (swap! app-state assoc-in [:board x y] v)
   )))
 
 ;; -------------------------
