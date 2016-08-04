@@ -6,7 +6,7 @@
 
 
 ;; -------------------------
-;; GLOBALS
+;; GLOBALS/INITIAL STATE
 ;;---------- this all needs to go in app-state
 ;;---------- step 2 - dynamic blocks
 
@@ -32,20 +32,21 @@
    (rand-int 256)]
 )
 
-(defn nb3 [n]
+(defn new-board [n]
   (vec (for [x (range n)]
   (vec (for [y (range n)]
     (with-meta (rand-color-num) {:key [x y]}))))))
 
+;; -------------------------
 ;; -------------------------
 ;; ALL HAIL THE ATOM
 ;new-board should take a min value of 2 or else that will fuck up all the neighbor calls... will it?
 
 (defonce app-state
   (atom {:text "...blend away your troubles...."
-         :board (nb3 board-size)
+         :board (new-board board-size)
          }))
-;;ATOM
+;;
 ;;--------------------------
 ;;--------------------------
 ;;MOAR Functions
@@ -113,6 +114,21 @@
               (swap! app-state assoc-in [:board x y] v)
   )))
 
+(defn blend-all [e]
+  (prn (.-keyCode e))
+  (map blend ))
+
+(defn key-handlers [e]
+  (cond
+    (= (.-keyCode e) 32) (blend-all e)
+  ))
+
+;;--------------------------
+;; Listeners
+
+(defn add-listeners []
+  (.addEventListener js/window "keyup" key-handlers))
+
 ;; -------------------------
 ;; Views
 
@@ -131,22 +147,22 @@
   [:div {:class "react-container"} [:h2 (:text @app-state)]
    [:div {:class "jankynav"} [:a {:href "/about"} "go to about page"]]
    [:div {:class "content"
-          :style {:width content-width}}
-       (doall (for [n (range (* board-size board-size))]
-       ^{:key n}
-       [:div {:style {:background-color (rgb-str (get-block-n n))
-                      :color "black"
-                      :margin (px-str (:margin block))
-                      :width (px-str (:size block))
-                      :height (px-str (:size block))
-                      :float "left"
-                      :font-family "Arial"
-                      :word-wrap "break-word"}
-              :class "colorbox"
-              :on-mouse-down (fn [e] (.preventDefault e "false"));stop highlighting
-              :on-click (fn [e] (do (blend n)))
-              }
-              [:p (rgb-str (get-block-n n))]]))
+          :style {:width content-width}
+          }
+       (doall (for [n (range (* board-size board-size))] ^{:key n}
+         [:div {:style {:background-color (rgb-str (get-block-n n))
+                        :color "black"
+                        :margin (px-str (:margin block))
+                        :width (px-str (:size block))
+                        :height (px-str (:size block))
+                        :float "left"
+                        :font-family "Arial"
+                        :word-wrap "break-word"}
+                :class "colorbox"
+                :on-mouse-down (fn [e] (.preventDefault e "false"));stop highlighting
+                :on-click (fn [e] (do (blend n)))
+                }
+                [:p (rgb-str (get-block-n n))]]))
    ]])
 
 ;; -------------------------
@@ -177,4 +193,5 @@
      (fn [path]
        (secretary/locate-route path))})
   (accountant/dispatch-current!)
-  (mount-root))
+  (mount-root)
+  (add-listeners))

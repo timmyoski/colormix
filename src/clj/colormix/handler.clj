@@ -12,11 +12,15 @@
        [:b "lein figwheel"]
        " in order to start the compiler"]])
 
+;<link rel="icon" type="image/x-icon" href="https://assets-cdn.github.com/favicon.ico">
+
 (defn head []
   [:head
    [:meta {:charset "utf-8"}]
    [:meta {:name "viewport"
            :content "width=device-width, initial-scale=1"}]
+   [:title "color-mix"]
+   [:link {:rel "icon" :href "/images/favicon.ico"}]
    (include-css (if (env :dev) "/css/site.css" "/css/site.min.css"))])
 
 (def loading-page
@@ -30,7 +34,7 @@
 (defroutes routes
   (GET "/" [] loading-page)
   (GET "/about" [] loading-page)
-  
+
   (resources "/")
   (not-found "Not Found"))
 
