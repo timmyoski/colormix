@@ -6,6 +6,24 @@
 
 
 ;; -------------------------
+;; GLOBALS
+;;---------- this all needs to go in app-state
+;;---------- step 2 - dynamic blocks
+
+
+(def board-size 5)
+(def block-w-border-size 100)
+(def margin-size 2)
+
+(def block {:margin margin-size
+            :total-size block-w-border-size
+            :size (- block-w-border-size (* margin-size 2))
+            })
+
+(def content-width (str (* (:total-size block) board-size) "px"))
+
+
+;; -------------------------
 ;; Functions that the ATOM relies on
 
 (defn rand-color-num []
@@ -18,8 +36,6 @@
   (vec (for [x (range n)]
   (vec (for [y (range n)]
     (with-meta (rand-color-num) {:key [x y]}))))))
-
-(def board-size 5)
 
 ;; -------------------------
 ;; ALL HAIL THE ATOM
@@ -36,11 +52,6 @@
 
 (defn px-str [anumb]
   (str anumb "px"))
-
-(def block {:size (- (:total-size block) (* (:margin block) 2))
-            :margin 2
-            :total-size 100
-            })
 
 (defn rgb-str [rgbvals]
   (let [[[r g b]] [rgbvals]]
@@ -66,18 +77,41 @@
 (defn get-all-sides [x y size]
   (let [last-index (- size 1)];readability
   (if (and (<= 0 x last-index) (<= 0 y last-index))
-  (concat
-    (map #(vector % y) (get-sides x size))
-    (map #(vector x %) (get-sides y size))))))
+    (vec
+      (concat
+        (map #(vector % y) (get-sides x size))
+        (map #(vector x %) (get-sides y size)))))))
 
 (defn get-xy [n]
   [(int (/ n board-size)) (mod n board-size)])
 
-(defn get-block [n]
+(defn get-block-n [n]
   (let [[x y] (get-xy n)]
     (get-in @app-state [:board x y])
   ))
 
+(defn get-block-xy [x y]
+  (get-in @app-state [:board x y])
+  )
+
+(defn get-all-rgb [n]
+  (let [[x y] (get-xy n)]
+      (vec (for [[xx yy] (get-all-sides x y board-size)]
+        (get-block-xy xx yy)))));returns vector of [[50 255 0] [] []] etc
+
+(defn blend [n]
+  (let [[x y] (get-xy n)
+        side-rgb-nvals (get-all-rgb n)
+        num-side-vals (count side-rgb-nvals)
+        weighted-ratio 4
+        num-repeats (* weighted-ratio num-side-vals)
+        ]
+  (as-> side-rgb-nvals v
+        (concat (repeat num-repeats (get-block-n n)) v)
+        (apply map + v)
+        (vec (map #(int (/ % (+ num-repeats num-side-vals))) v));FIXXXX the int rounding, decide math/floor vs ceil
+        (swap! app-state assoc-in [:board x y] v)
+  )))
 
 ;; -------------------------
 ;; Views
@@ -96,25 +130,24 @@
 (defn home-page []
   [:div {:class "react-container"} [:h2 (:text @app-state)]
    [:div {:class "jankynav"} [:a {:href "/about"} "go to about page"]]
-     [:div {:class "content"
-            :style {:max-width (str (* (:total-size block) board-size) "px")}}
-      (doall (for [x (range (* board-size board-size))]
-          ^{:key x}
-           [:div {:style {:background-color (rgb-str (get-block x))
-                          :color (rand-color)
-                          :margin (px-str (:margin block))
-                          :width (px-str (:size block))
-                          :height (px-str (:size block))
-                          :float "left"
-                          :word-wrap "break-word"}
-                  :class "colorbox"
-                  :on-click (fn [e]
-                              (prn (.remove (.-target e))))
-                  }
-           (rgb-str (get-block x))]))
-            ;figure out destruct better and use to set color of block
-    ]
-   ])
+   [:div {:class "content"
+          :style {:width content-width}}
+       (doall (for [n (range (* board-size board-size))]
+       ^{:key n}
+       [:div {:style {:background-color (rgb-str (get-block-n n))
+                      :color "black"
+                      :margin (px-str (:margin block))
+                      :width (px-str (:size block))
+                      :height (px-str (:size block))
+                      :float "left"
+                      :font-family "Arial"
+                      :word-wrap "break-word"}
+              :class "colorbox"
+              :on-mouse-down (fn [e] (.preventDefault e "false"));stop highlighting
+              :on-click (fn [e] (do (blend n)))
+              }
+              [:p (rgb-str (get-block-n n))]]))
+   ]])
 
 ;; -------------------------
 ;; Routes
