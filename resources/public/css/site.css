@@ -2,7 +2,6 @@
   font-family: 'Helvetica Neue', Verdana, Helvetica, Arial, sans-serif;
   max-width: 75%;
   margin: 0 auto;
-  padding-top: 2%;
   -webkit-font-smoothing: antialiased;
   font-size: 1.125em;
   color: #333;
@@ -12,6 +11,15 @@
 
 h1, h2, h3 {
   color: #000;
+}
+
+.rgb-input{
+  border-style: outset;
+  border-width: 10px;
+  border-color: rgba(255,255,255,.2);
+  width: 30%;
+  /*text-align: center;*/
+  margin: 0 auto;
 }
 h1 {
   font-size: 2.5em
@@ -42,4 +50,37 @@ a:hover {
 .jankynav{
   margin: 0 auto;
   text-align: center;
+}
+.submit-button{
+  border-style: outset;
+  border-width: 10px;
+  border-color: rgba(255,255,255,.2);
+  width: 30%;
+  text-align: center;
+  margin: 0 auto;
+  -webkit-transform: translateZ(0);
+    display: inline-block;
+    vertical-align: middle;
+    transform: translateZ(0);
+    box-shadow: 0 0 1px rgba(0, 0, 0, 0);
+    backface-visibility: hidden;
+    -moz-osx-font-smoothing: grayscale;
+    transition-duration: 0.3s;
+    transition-property: transform;
+}
+
+.hvr-grow:hover,
+.hvr-grow:focus,
+.hvr-grow:active {
+    transform: scale(1.1);
+}
+
+.tagline{
+  transform: rotate(90deg);
+	transform-origin: left top 0;
+}
+.colorbox{
+  :float "left"
+  :font-family "Arial"
+  :word-wrap "break-word"
 }
