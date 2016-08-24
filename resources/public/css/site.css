@@ -1,26 +1,7 @@
-.body-container {
-  font-family: 'Helvetica Neue', Verdana, Helvetica, Arial, sans-serif;
-  max-width: 75%;
-  margin: 0 auto;
-  -webkit-font-smoothing: antialiased;
-  font-size: 1.125em;
-  color: #333;
-  line-height: 1.5em;
-  text-align: center;
-}
-
 h1, h2, h3 {
   color: #000;
 }
 
-.rgb-input{
-  border-style: outset;
-  border-width: 10px;
-  border-color: rgba(255,255,255,.2);
-  width: 30%;
-  /*text-align: center;*/
-  margin: 0 auto;
-}
 h1 {
   font-size: 2.5em
 }
@@ -41,6 +22,18 @@ a {
 a:hover {
   text-decoration: underline;
 }
+/* -------------- new css -------------- */
+
+.body-container {
+  font-family: 'Helvetica Neue', Verdana, Helvetica, Arial, sans-serif;
+  max-width: 75%;
+  margin: 0 auto;
+  -webkit-font-smoothing: antialiased;
+  font-size: 1.125em;
+  color: #333;
+  line-height: 1.5em;
+  text-align: center;
+}
 
 .content{
   margin: 0 auto;
@@ -51,22 +44,35 @@ a:hover {
   margin: 0 auto;
   text-align: center;
 }
+
+.title-wrapper{
+  height; 75%;
+  margin: 0 auto;
+  overflow: hidden; /* text box!?!?!?!*/
+}
+
+.rgb-input{
+  width: 15%;
+  height: 35px;
+  text-align: center;
+  border: 5px solid;
+}
+
 .submit-button{
   border-style: outset;
   border-width: 10px;
   border-color: rgba(255,255,255,.2);
-  width: 30%;
   text-align: center;
   margin: 0 auto;
   -webkit-transform: translateZ(0);
-    display: inline-block;
-    vertical-align: middle;
-    transform: translateZ(0);
-    box-shadow: 0 0 1px rgba(0, 0, 0, 0);
-    backface-visibility: hidden;
-    -moz-osx-font-smoothing: grayscale;
-    transition-duration: 0.3s;
-    transition-property: transform;
+  display: inline-block;
+  vertical-align: middle;
+  transform: translateZ(0);
+  box-shadow: 0 0 1px rgba(0, 0, 0, 0);
+  backface-visibility: hidden;
+  -moz-osx-font-smoothing: grayscale;
+  transition-duration: 0.3s;
+  transition-property: transform;
 }
 
 .hvr-grow:hover,
@@ -78,9 +84,20 @@ a:hover {
 .tagline{
   transform: rotate(90deg);
 	transform-origin: left top 0;
+  float: left;
 }
 .colorbox{
   :float "left"
   :font-family "Arial"
   :word-wrap "break-word"
+  :color "black"
 }
+
+/*
+input[type="text"] {like a class kinda
+  width: "50px";
+  height: 35;
+  text-align: "center";
+  border: "solid 5px";
+}
+*/

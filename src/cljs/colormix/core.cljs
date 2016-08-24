@@ -4,6 +4,20 @@
               [secretary.core :as secretary :include-macros true]
               [accountant.core :as accountant]))
 
+;; to do
+;; 1 - refactor xy-n data structure (like every single function nbd) (faster? isn't x-y more dictionary-ish than n?) although map blend n is sexy
+;; 2- game "writes itself"
+;; 3 - gmae - 999 each block w if gray/brown = make white ..?
+;; 4 -?
+;; 5 - #1 - white board w/ color "seeds" "g" and spaces
+;; make board lookup a funtion of row-size x num-cols y so it can be a rect (and n lookup while youre at it
+;; some block don't blend -permanent color-water-falls...
+;;on shiiiit
+;;only blend in one direction = waterfall = pattern
+
+
+
+
 
 ;; -------------------------
 ;; GLOBALS/INITIAL STATE
@@ -12,11 +26,11 @@
 
 (def content-width (.-innerHeight js/window));(str (* (:total-size block) num-tiles) "px"))
 
-(def num-tiles 5)
+(def num-tiles 10)
 (def block-w-border-size 50)
 (def margin-size .5)
 (def screen-percent (/ 75 100.0))
-(def weighted-color [20 246 150])
+;(def weighted-color [20 246 150])
 (def weighted-ratio-g 4)
 
 ;fucking w dynamic num-tiles fucks with the model (dependent on numtiles)
@@ -29,8 +43,8 @@
 
 (defn get-block [num-tiles]
   {:margin margin-size
-    :total-size (/ (* (.-innerHeight js/window) screen-percent 100) num-tiles)
-    :size (- (/ (* (.-innerHeight js/window) screen-percent) num-tiles) (* margin-size 2))
+   :total-size (/ (* (.-innerHeight js/window) screen-percent 100) num-tiles)
+   :size (- (/ (* (.-innerHeight js/window) screen-percent) num-tiles) (* margin-size 2))
     });;GROSS DOUBLE CODE
 
 
@@ -43,15 +57,17 @@
 ;; Functions that the ATOM builds from
 
 (defn rand-color-num []
-  [(rand-int 256)
-   (rand-int 256)
-   (rand-int 256)]
+  ;[(rand-int 256)
+  ; (rand-int 256)
+  ; (rand-int 256)]
+  [255 255 255]
 )
 
 (defn new-board [n]
   (vec (for [y (range n)]
   (vec (for [x (range n)]
-    (with-meta (rand-color-num) {:key [x y]}))))))
+    (with-meta (rand-color-num) {:key [x y]
+                                 :mutable true}))))))
 
 ;; -------------------------
 ;; -------------------------
@@ -64,6 +80,7 @@
          :width (* (.-innerHeight js/window) screen-percent);def once....
          :block (get-block num-tiles)
          :background-color [255 255 255]
+         :weighted-color [20 246 150]
          }))
 ;;
 ;;--------------------------
@@ -103,7 +120,7 @@
         (map #(vector x %) (get-sides y size))))))
 );->[2 3 6]=>[[3 3] [1 3] [2 4] [2 2]]
 
-(defn get-xy [n]
+(defn get-xy [n];;wtffffff this is really get-yx
   [(int (/ n num-tiles)) (mod n num-tiles)])
 
 ;;---------------------------------
@@ -120,6 +137,23 @@
 
 (defn rgb-side-vals [x y board];->[[3 3] [1 3] [2 4] [2 2]]=>[[50 255 0]... etc
   (vec (map #(get-in board %) (get-all-sides x y num-tiles))));-----GLOBAL
+
+
+(defn set-mutability [n truthy]
+  ;(get-in @app-state x
+  ;(swap! app-state assoc-in [:board x y]
+  (let [block-model (get-block-n n)
+        new-meta-info (assoc (meta block-model) :mutable truthy)
+        [x y] (get-xy n)
+        block (get-in app-state [:board x y])
+        ]
+    ;(swap! app-state assoc-in [:board x y meta] truthy)
+    ;(assoc-in meta-info [:mutable] truthy)
+    (prn new-meta-info)
+    ;(alter-meta! block-model
+    )
+
+  )
 
 ;;---------------------------------
 ;; Mutators
@@ -147,12 +181,24 @@
 ;;swap new-color with proper cursor (create that too)
 (defn blend-refactor [n board];;USE POLYMORPHISM??? SO THAT...ahem... when if you supply additional args it will use that as weighted color?
   (let [[x y] (get-xy n);board (get-in @app-state [:board]);;------DEREF!!!!!!!!!!!!!!!!!!!
-        rgb-side-colors (rgb-side-vals x y board)]
-    (swap! app-state assoc-in [:board x y] ;;CURSOR ME PLZZZZ
-           (apply avg-colors
-                  (weight-by 10 (get-in board [x y]) rgb-side-colors)))
+        rgb-side-colors (rgb-side-vals x y board)
+        block (get-block-n n)
+        meta-info (meta block)]
+    (if (:mutable (meta ((board y) x)))
+      (swap! app-state assoc-in [:board x y] ;;CURSOR ME PLZZZZ
+           (with-meta
+             (apply avg-colors (weight-by 30 (get-in board [x y]) rgb-side-colors))
+             {:key [x y] :mutable (:mutable meta-info)}
+             ))
                   ;;ratio of "move"/"click"? 2???
-  ))
+  )))
+
+;;(if (:mutable (meta ((board y) x)))
+;;                (swap! app-state assoc-in [:board x y] (with-meta v {:key [x y]
+;;                                                                     :mutable (:mutable meta-info)}))
+
+
+
 
 ;;also, more important point, you simply deref the part of the atom you'd like to react to in
 ;;the given component in the component function or one of the functions within it and voila!
@@ -175,80 +221,147 @@
 (defn blend [n board];;delete after polymorphism on blend-refactor
                     ;;only used as a placeholder for onclick handler
   (let [;board (get-in @app-state [:board]);;------DEREF!!!!!!!!!!!!!!!!!!!
-        [x y] (get-xy n)
+        [x y] (get-xy n);;REALLY Y X
         rgb-side-vals (rgb-side-vals x y board)
         num-side-vals (count rgb-side-vals)
         weighted-ratio 5
-        weighted-c weighted-color
+        weighted-c (get-in @app-state [:weighted-color])
         num-repeats (* weighted-ratio num-side-vals)
+        block (get-block-n n)
+        meta-info (meta block)
         ]
         (as-> rgb-side-vals v
-              (concat (repeat 5 weighted-color) (repeat num-repeats (get-in board [x y])) v)
+              (concat (repeat 5 weighted-c) (repeat num-repeats (get-in board [x y])) v);;WHY NOT WORK???
               (apply map + v)
               (vec (map #(int (/ % (+ num-repeats num-side-vals 1))) v));FIXXXX the int rounding, decide math/floor vs ceil
-              (swap! app-state assoc-in [:board x y] v)
+              (if (:mutable (meta ((board y) x)))
+                (swap! app-state assoc-in [:board x y] (with-meta v {:key [x y]
+                                                                     :mutable (:mutable meta-info)}))
+                (prn (meta ((board y) x)) " is the meta from: " ((board y) x) " from " x ","y))
   )))
 
 (defn blend-all [e]
   (let [board (get-in @app-state [:board])
         first-row (get-in board [1])];;------DEREF!!!!!!!!!!!!!!!!!!!
   (.preventDefault e "false")
-  (.stopPropigation e)
-  (prn (.-keyCode e) " : keycode")
-  (prn (js-keys e) " : js-keys")
-  (prn (.-id (.-target e)) " : target-id?")
-  ;;is e.id the same as the ^{key} meta info we put on it?
-  (prn "reached them all")
+  (comment
+    (prn (.-keyCode e) " : keycode")
+    (prn (js-keys e) " : js-keys")
+    (prn (.-id (.-target e)) " : target-id?")
+    ;;is e.id the same as the ^{key} meta info we put on it?
+    (prn "reached them all")
+  )
   (doall (for [i (range (* num-tiles num-tiles))]
     (blend-refactor i board);(prn (meta color))
-  ))))
+  ))
+    (.stopPropagation e)
+    ))
 
+(def startcolor 0)
 
 ;;
-;;WHOA duuuuuuude
+;; WHOA duuuuuuude
 ;; css to provide filters like aftereffects for videos insta? apply globally not to each frame
+
+;; WHOAAAA
+;; "...blend away your troubles..." acts like a max/container for the y axis
+;; once that's centered then we have a y-centered "base" to build from (flexbox plz)
+
+;;gradient composer -> pattern to blend
+
+(defn rgb-input [color-type]
+  (let [rgb ["red" "green" "blue"]]
+    [:input {:class "rgb-input"
+             :type "text"
+             :max-length 3
+             :name color-type
+             :placeholder color-type
+             :style {:border-color color-type}
+             ;; :on-key-press (fn [e] (if (< 47 (.-keyCode e) 58) (do (prn (.-keyCode e)) e)))
+             :on-change (fn [e] (swap! app-state assoc-in
+                                   [:weighted-color (.indexOf rgb color-type)]
+                                   (int (.-value (.-target e)))))
+             }]))
+
+(defn block-html [n state];; state = @app-state
+  (let [block (:block state)]
+    ^{:key n}
+    [:div { :class "colorbox"
+            :style {:color "black"
+                    :float "left"
+                    :font-family "Arial"
+                    :word-wrap "break-word"
+                    :background-color (rgb-str (get-block-n n));;------DEREF!!!!!!!!!!!!!!!
+                    :margin (px-str (:margin block))
+                    :width (px-str (:size block))
+                    :height (px-str (:size block))
+                    }
+            :on-mouse-move (fn [e] (.preventDefault e "false");stops text/mouse highlighting
+                                   (blend-refactor n (get-in @app-state [:board])));(prn (js-keys (.-style (.-target e))))
+                                   ;(swap! app-state assoc-in [:background-color] (rgb-str (get-in @app-state [:background-color])))
+            ;;                ;;------DEREF!!!!!!!!!!!!!!!!!!!
+            :on-click (fn [e] (do (blend n (:board state))));;------DEREF!!!!!!!!!!!!!!!!!!!
+            }
+      ])
+  )
+
+
+;;jquery reagent .css set/get... sass?
 
 (defn render-colormix []
   [:div {:class "react-container"}
+    [:div {:class "title-wrapper"} [:h2 {:class "tagline"} (doall (for [chr (:text @app-state)
+                              :let [len (count (:text @app-state))
+                                   ind (range len)]]
+                                    ^{:key (random-uuid)}[:span {:style {:color (rgb-str (vec (repeat 3 (* ind (int (/ 255 len))))))}} chr]))]
+     ];;------DEREF!!!!!!!!!!!!!!!!!!!
    ;[:div {:class "jankynav"} [:a {:href "/about"} "go to about page"]]
    [:div {:class "inputs"}
-    [:input {:type "text" :name "r" :placeholder (str (weighted-color 0)) :style {:width "50px" :height 35 :text-align "center" :border "solid 5px red"}}];onenter-> sw focus to next
-    [:input {:type "text" :name "g" :placeholder (str (weighted-color 1)) :style {:width "50px" :height 35 :text-align "center" :border "solid 5px green"}}];onenter-> sw focus to next
-    [:input {:type "text" :name "b" :placeholder (str (weighted-color 2)) :style {:width "50px" :height 35:text-align "center" :border "solid 5px blue"}}];onenter-> submit
-    [:span [:span {:class "submit-button" :style {:background-color (rgb-str (get-in @app-state [:background-color]))};;FIX ME!!!!;rgb-str weighted-color)};
-           :on-mouse-move (fn [e] (.preventDefault e "false"))} "submit"]]];on-click->submit
-   [:div {:class "content"
-          :style {:width (get-in @app-state [:width])}
-          }
-       (doall (for [n (range (* num-tiles num-tiles))] ^{:key n}
-         [:div {:style {:background-color (rgb-str (get-block-n n));;------DEREF!!!!!!!!!!!!!!!!!!!
-                        :color "black"
-                        :margin (px-str (get-in @app-state [:block :margin]))
-                        :width (px-str (get-in @app-state [:block :size]));;CURSORS
-                        :height (px-str (get-in @app-state [:block :size]));;BUILDS CURSORS RECURSIVELY
-                        :float "left"
-                        :font-family "Arial"
-                        :word-wrap "break-word"}
-                :class "colorbox"
-                :on-mouse-move (fn [e] (.preventDefault e "false");stops text/mouse highlighting
-                                       (blend-refactor n (get-in @app-state [:board]))
-                                       ;(prn (.-backgroundColor (.-style (.-target e))))
-                                       (prn (.-backgroundColor (.-style (.-target e))))
-                                       ;(prn (js-keys (.-style (.-target e))))
-                                       ;(swap! app-state assoc-in [:background-color] (rgb-str (get-in @app-state [:background-color])))
+    [:div {:class "submit-button"
+                   :style {:background-color (rgb-str (get-in @app-state [:weighted-color]))}}
 
-                                );;------DEREF!!!!!!!!!!!!!!!!!!!
-                :on-click (fn [e] (do (blend n (get-in @app-state [:board]))));;------DEREF!!!!!!!!!!!!!!!!!!!
-                }
-                ]));;------DEREF!!!!!!!!!!!!!!!!!!![:p (rgb-str (get-block-n n))]
-   ]])
+    (rgb-input "red");onkeypress='return event.charCode >= 48 && event.charCode <= 57'>
+    (rgb-input "green");onenter-> sw focus to next?
+    (rgb-input "blue");add some sort of button that has a :on method that incs/decs the color input
+                       ;just have it dec the val, start that chain of derrefs/renders
+
+                  ]];on-click->submit
+   [:div {:class "content"
+          :style {:width (get-in @app-state [:width])}}
+       (doall
+         (for [n (range (* num-tiles num-tiles))]
+           (block-html n @app-state)
+           ;;[:div {:class "colorbox"
+            ;;      :style {:background-color (rgb-str (get-block-n n));;------DEREF!!!!!!!!!!!!!!!!!!!
+            ;;             :color "black"
+            ;;              :margin (px-str (get-in @app-state [:block :margin]))
+            ;;              :width (px-str (get-in @app-state [:block :size]))
+            ;;            :height (px-str (get-in @app-state [:block :size]))
+            ;;              :float "left"
+            ;;              :font-family "Arial"
+            ;;              :word-wrap "break-word"}
+                  ;;:on-mouse-move (fn [e] (.preventDefault e "false");stops text/mouse highlighting
+                  ;;                       (blend-refactor n (get-in @app-state [:board]));(prn (js-keys (.-style (.-target e))))
+                                         ;(swap! app-state assoc-in [:background-color] (rgb-str (get-in @app-state [:background-color])))
+                  ;;                );;------DEREF!!!!!!!!!!!!!!!!!!!
+            ;;      :on-click (fn [e] (do (blend n (get-in @app-state [:board]))));;------DEREF!!!!!!!!!!!!!!!!!!!
+            ;;      }
+            ;;]
+           )
+         )
+      ;;[:div {:class "submit-button" :style {:background-color (rgb-str (vec (map #(int (* % 9/10)) (get-in @app-state [:weighted-color]))))}}]
+    ]])
 
 ;;--------------------------
 ;; Listeners
 
 (defn key-handlers [e]
-  (cond
-    (= (.-keyCode e) 32) (blend-all e);;stop propigation() AAAAAND stopDefault()
+  (do
+    ;(prn (.-keyCode e))
+    (cond
+      (= (.-keyCode e) 32) (blend-all e);;stop propigation() AAAAAND stopDefault()
+      (= (.-keyCode e) 71) (doall (for [i (range 10)] (blend-all e)))
+    )
   ))
 
 (defn update-content-width []
